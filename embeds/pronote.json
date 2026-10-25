@@ -1,0 +1,24 @@
+{
+  "embeds": [
+    {
+      "title": "PRONOTE",
+      "description": "Connecte-toi à ton espace PRONOTE pour retrouver facilement tout ce dont tu as besoin au quotidien.\nTu y trouveras ton emploi du temps mis à jour, tes notes & moyennes, les devoirs à faire avec leurs dates de rendu, ainsi que les messages et annonces de tes professeurs.\nTout est regroupé au même endroit pour que tu puisses suivre ta scolarité sans rien manquer !"
+    }
+  ],
+  "components": [
+    {
+      "type": 1,
+      "components": [
+        {
+          "type": 2,
+          "emoji": {
+            "id": 1561350567018758266
+          },
+          "label": "Accéder à mon espace PRONOTE",
+          "style": 5,
+          "url": "https://pronote.lycee-fm.fr/"
+        }
+      ]
+    }
+  ]
+}

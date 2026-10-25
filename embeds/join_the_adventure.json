@@ -1,0 +1,64 @@
+{
+  "embeds": [
+    {
+      "title": "Tu souhaites rejoindre l'aventure ?",
+      "description": "C'est le moment de te lancer !\nFais ta demande d'inscription et rejoins l'aventure dès **maintenant**. Emploi du temps, notes, devoirs... tout t'attend !\nN'hésite pas à consulter la liste de notre <#1550774222060654655> !\n\n<a:attention:1563250634847944754> Pour les élèves de **__première__**, vous devrez choisir deux spécialités dans deux groupes différents.\n- **Groupe 1 :** Anglais Monde Contemporain (AMC) - Histoire-Géographie, Géopolitique et Sciences Politiques (HGGSP) - Humanité, Littérature et Philosophie (HLP) - Sciences Économiques et Sociales (SES)\n- **Groupe 2 :** Mathématiques (MATHS) - Numérique et Sciences Informatiques (NSI) - Physique-Chimie (PH-CH) - Sciences de l'Ingénieur (SI) - Sciences de la Vie et de la Terre (SVT)."
+    }
+  ],
+  "components": [
+    {
+      "type": 1,
+      "components": [
+        {
+          "type": 2,
+          "emoji": {
+            "name": "🎓"
+          },
+          "label": "Devenir élève",
+          "style": 2,
+          "custom_id": "student_enrollment:begin"
+        }
+      ]
+    },
+    {
+      "type": 1,
+      "components": [
+        {
+          "type": 3,
+          "custom_id": "applications:begin",
+          "placeholder": "👔 Rejoindre l'équipe",
+          "options": [
+            {
+              "label": "Assistant de Direction",
+              "value": "Assistant de Direction"
+            },
+            {
+              "label": "Secrétaire",
+              "value": "Secrétaire"
+            },
+            {
+              "label": "Conseiller Principal d'Éducation",
+              "value": "Conseiller Principal d'Éducation"
+            },
+            {
+              "label": "Professeur",
+              "value": "Professeur"
+            },
+            {
+              "label": "Assistant d'éducation",
+              "value": "Assistant d'éducation"
+            },
+            {
+              "label": "Infirmier",
+              "value": "Infirmier"
+            },
+            {
+              "label": "Modérateur",
+              "value": "Modérateur"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
