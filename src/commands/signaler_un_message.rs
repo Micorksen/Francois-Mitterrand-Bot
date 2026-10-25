@@ -1,9 +1,6 @@
 use poise::serenity_prelude as serenity;
 
-use crate::{
-    config::{PRIMARY_COLOR, REPORTED_MESSAGES_CHANNEL}, Context,
-    Error,
-};
+use crate::{Context, Error};
 
 /// Signaler un message.
 #[poise::command(
@@ -15,7 +12,10 @@ pub async fn signaler_un_message(
     ctx: Context<'_>,
     message: serenity::Message,
 ) -> Result<(), Error> {
-    REPORTED_MESSAGES_CHANNEL
+    ctx.data()
+        .config
+        .common
+        .reported_messages_channel
         .to_guild_channel(&ctx, message.guild_id)
         .await?
         .send_message(
@@ -24,7 +24,7 @@ pub async fn signaler_un_message(
                 .content(message.link().to_string())
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(ctx.data().config.common.primary_color)
                         .author(
                             serenity::CreateEmbedAuthor::new(message.author.display_name())
                                 .icon_url(&message.author.face())
@@ -38,7 +38,7 @@ pub async fn signaler_un_message(
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
-                .color(PRIMARY_COLOR)
+                .color(ctx.data().config.common.primary_color)
                 .title("Signalement")
                 .description(
                     "Merci ! Le message a bien été signalé et sera examiné par un modérateur.",

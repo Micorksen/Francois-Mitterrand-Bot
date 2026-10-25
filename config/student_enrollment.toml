@@ -1,0 +1,50 @@
+[student_enrollment]
+student_role = 1550774060718358570
+intern_role = 1550774065210593322
+sex_m_role = 1550774076799197254
+sex_f_role = 1550774079727079535
+
+review_channel = 1555219169782276216
+response_channel = 1563247667818135582
+
+[student_enrollment.lv1]
+AGL1 = "Anglais LV1"
+
+[student_enrollment.lv2]
+ALL2 = "Allemand LV2"
+ESP2 = "Espagnol LV2"
+ITA2 = "Italien LV2"
+
+[[student_enrollment.specialized_subjects]]
+AMC = "Anglais Monde Contemporain"
+HGGSP = "Histoire-Géographie, Géopolitique et Sciences Politiques"
+HLP = "Humanités, Littérature et Philosophie"
+SES = "Sciences Économiques et Sociales"
+
+[[student_enrollment.specialized_subjects]]
+MATHS = "Mathématiques"
+NSI = "Numérique et Sciences Informatiques"
+PH-CH = "Physique-Chimie"
+SI = "Sciences de l'Ingénieur"
+SVT = "Sciences de la Vie et de la Terre"
+
+[student_enrollment.options]
+DGEMC = "Droit et Grands Enjeux du Monde Contemporain"
+"MATH.COMPL" = "Mathématiques Complémentaires"
+"MATH.EXPERT" = "Mathématiques Expertes"
+
+[student_enrollment.ent]
+url = "https://ent.lycee-fm.fr"
+oauth2_client_id = "BOT-DISCORD"
+structure_id = "7c65af11-c001-4ea0-908d-6bf97124d15a"
+
+[student_enrollment.ent.classes]
+2A = "22a3b6d7-dda8-4f1e-8006-a9964dcfff2f"
+2B = "7e77dc75-daf4-4479-9e44-358d76d57eff"
+2C = "60daefb2-3f27-4213-b1c3-6510fa742e0a"
+1A = "4b970755-fc99-49fc-bb28-a7dc2ea45f8a"
+1B = "65b64f54-aca6-41c8-baf4-bab2bacda4d7"
+1C = "519b1566-c423-4890-9911-51147d3cccd2"
+TA = "943517f1-d068-4496-b424-a517982187d5"
+TB = "ec4f0568-6ca7-49e0-9009-96efcdec25ea"
+TC = "ca3f4eac-de2e-4eb6-a770-b6b1ee9e73bf"

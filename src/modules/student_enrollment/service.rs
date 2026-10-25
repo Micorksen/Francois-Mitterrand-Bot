@@ -1,11 +1,7 @@
 use poise::serenity_prelude as serenity;
 
-use super::{
-    config::{REVIEW_CHANNEL, STUDENT_ROLE},
-    modals, structs,
-    structs::Enrollment,
-};
-use crate::{config::PRIMARY_COLOR, Data, Error};
+use super::{modals, structs, structs::Enrollment};
+use crate::{Data, Error};
 
 async fn first_step(
     ctx: &serenity::Context,
@@ -37,11 +33,14 @@ async fn first_step(
 
 async fn send_for_review(
     ctx: &serenity::Context,
+    data: &Data,
     guild_id: Option<serenity::GuildId>,
     user: &serenity::User,
     enrollment: &Enrollment,
 ) -> Result<(), Error> {
-    REVIEW_CHANNEL
+    data.config
+        .student_enrollment
+        .review_channel
         .to_guild_channel(&ctx, guild_id)
         .await?
         .send_message(
@@ -50,7 +49,7 @@ async fn send_for_review(
                 .content("@everyone")
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(data.config.common.primary_color)
                         .title("Nouvelle demande d'inscription !")
                         .field("Prénom", enrollment.first_name.as_str(), true)
                         .field("Nom de famille", enrollment.last_name.as_str(), true)
@@ -103,19 +102,18 @@ async fn send_for_review(
 
 pub async fn handle(
     ctx: &serenity::Context,
-    _data: &Data,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
-    if interaction
-        .member
-        .as_deref()
-        .is_some_and(|m| m.roles.contains(&STUDENT_ROLE))
-    {
+    if interaction.member.as_deref().is_some_and(|m| {
+        m.roles
+            .contains(&data.config.student_enrollment.student_role)
+    }) {
         interaction.create_response(&ctx.http, serenity::CreateInteractionResponse::Message(
             serenity::CreateInteractionResponseMessage::new()
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(data.config.common.primary_color)
                         .title("Il y a un petit malentendu...")
                         .description("Tu es déjà compté parmi nos élèves, pas besoin de refaire une demande !")
                 )
@@ -127,14 +125,21 @@ pub async fn handle(
     let Some(mut enrollment) = first_step(ctx, interaction).await? else {
         return Ok(());
     };
-    let Some(click) = prompt_continue(ctx, interaction).await? else {
+    let Some(click) = prompt_continue(ctx, data, interaction).await? else {
         return Ok(());
     };
-    let Some(_) = final_step(ctx, &click, &mut enrollment).await? else {
+    let Some(_) = final_step(ctx, data, &click, &mut enrollment).await? else {
         return Ok(());
     };
 
-    send_for_review(ctx, interaction.guild_id, &interaction.user, &enrollment).await?;
+    send_for_review(
+        ctx,
+        data,
+        interaction.guild_id,
+        &interaction.user,
+        &enrollment,
+    )
+    .await?;
     interaction
         .create_followup(
             &ctx.http,
@@ -142,7 +147,7 @@ pub async fn handle(
                 .ephemeral(true)
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(data.config.common.primary_color)
                         .title("Ton inscription en tant qu'élève")
                         .description(format!(
                             "C'est tout bon pour moi, **{}** !",
@@ -157,6 +162,7 @@ pub async fn handle(
 
 async fn prompt_continue(
     ctx: &serenity::Context,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<Option<serenity::ComponentInteraction>, Error> {
     let message = interaction.create_followup(
@@ -165,7 +171,7 @@ async fn prompt_continue(
             .ephemeral(true)
             .embed(
                 serenity::CreateEmbed::new()
-                    .color(PRIMARY_COLOR)
+                    .color(data.config.common.primary_color)
                     .title("Ton inscription en tant qu'élève")
                     .description("Il me manque quelques informations sur toi avant de valider ton inscription...")
             )
@@ -202,13 +208,14 @@ async fn prompt_continue(
 /// Dernière étape : l'élève complète son inscription.
 async fn final_step(
     ctx: &serenity::Context,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
     enrollment: &mut Enrollment,
 ) -> Result<Option<serenity::ModalInteraction>, Error> {
     interaction
         .create_response(
             &ctx.http,
-            serenity::CreateInteractionResponse::Modal(modals::final_step(enrollment)),
+            serenity::CreateInteractionResponse::Modal(modals::final_step(data, enrollment)),
         )
         .await?;
 
@@ -271,7 +278,7 @@ pub async fn retrieve_ent_account(
                         .ephemeral(true)
                         .embed(
                             serenity::CreateEmbed::new()
-                                .color(PRIMARY_COLOR)
+                                .color(data.config.common.primary_color)
                                 .title("Récupérer mes identifiants")
                                 .description("Ce message ne t'était pas destiné..."),
                         ),
@@ -285,10 +292,23 @@ pub async fn retrieve_ent_account(
     let http_client = reqwest::Client::new();
 
     let ent_token = http_client
-        .post(format!("{}/auth/oauth2/token", data.config.ent_url))
+        .post(format!(
+            "{}/auth/oauth2/token",
+            data.config.student_enrollment.ent.url
+        ))
         .form(&[
-            ("client_id", data.config.ent_client_id.as_str()),
-            ("client_secret", data.config.ent_client_secret.as_str()),
+            (
+                "client_id",
+                data.config.student_enrollment.ent.oauth2_client_id.as_str(),
+            ),
+            (
+                "client_secret",
+                data.config
+                    .student_enrollment
+                    .ent
+                    .oauth2_client_secret
+                    .as_str(),
+            ),
             ("grant_type", "client_credentials"),
             (
                 "scope",
@@ -303,7 +323,7 @@ pub async fn retrieve_ent_account(
     let ent_account = http_client
         .get(format!(
             "{}/directory/user/{}",
-            data.config.ent_url,
+            data.config.student_enrollment.ent.url,
             interaction.data.custom_id.split(":").last().unwrap()
         ))
         .bearer_auth(ent_token.access_token)
@@ -320,7 +340,7 @@ pub async fn retrieve_ent_account(
                     .ephemeral(true)
                     .embed(
                         serenity::CreateEmbed::new()
-                            .color(PRIMARY_COLOR)
+                            .color(data.config.common.primary_color)
                             .title("Récupérer mes identifiants")
                             .field("Identifiant", format!("`{}`", ent_account.login), true)
                             .field(

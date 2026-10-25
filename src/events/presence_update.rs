@@ -1,6 +1,6 @@
 use poise::serenity_prelude as serenity;
 
-use crate::{config::SUPPORTER_ROLE, Data, Error};
+use crate::{Data, Error};
 
 fn has_supporting_activity(presence: &serenity::Presence) -> bool {
     presence.activities.iter().any(|a| {
@@ -13,7 +13,7 @@ fn has_supporting_activity(presence: &serenity::Presence) -> bool {
 /// Système de soutien (avec le lien du serveur dans le statut Discord).
 pub async fn handle(
     ctx: &serenity::Context,
-    _data: &Data,
+    data: &Data,
     old_data: &Option<serenity::Presence>,
     new_data: &serenity::Presence,
 ) -> Result<(), Error> {
@@ -36,19 +36,19 @@ pub async fn handle(
     }
 
     let member = guild_id.member(&ctx, new_data.user.id).await?;
-    if is_supporting && !member.roles.contains(&SUPPORTER_ROLE) {
+    if is_supporting && !member.roles.contains(&data.config.common.supporter_role) {
         member
             .add_role(
                 &ctx.http,
-                SUPPORTER_ROLE,
+                data.config.common.supporter_role,
                 Some("Membre soutenant le serveur"),
             )
             .await?;
-    } else if !is_supporting && member.roles.contains(&SUPPORTER_ROLE) {
+    } else if !is_supporting && member.roles.contains(&data.config.common.supporter_role) {
         member
             .remove_role(
                 &ctx.http,
-                SUPPORTER_ROLE,
+                data.config.common.supporter_role,
                 Some("Membre ne soutenant plus le serveur"),
             )
             .await?;

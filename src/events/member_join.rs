@@ -1,21 +1,18 @@
 use poise::serenity_prelude as serenity;
 use serenity::Mentionable;
 
-use crate::{
-    config::{PRIMARY_COLOR, WELCOME_CHANNEL, WELCOME_ROLE}, Data,
-    Error,
-};
+use crate::{Data, Error};
 
 pub async fn handle(
     ctx: &serenity::Context,
-    _data: &Data,
+    data: &Data,
     new_member: &serenity::Member,
 ) -> Result<(), Error> {
     // Ajoute le rôle de bienvenue aux nouveaux membres.
     new_member
         .add_role(
             &ctx.http,
-            WELCOME_ROLE,
+            data.config.common.welcome_role,
             Some("Rôle attribué automatiquement aux nouveaux membres"),
         )
         .await?;
@@ -31,7 +28,7 @@ pub async fn handle(
         )
     };
 
-    WELCOME_CHANNEL.to_guild_channel(&ctx, Some(new_member.guild_id))
+    data.config.common.welcome_channel.to_guild_channel(&ctx, Some(new_member.guild_id))
         .await?
         .send_message(
             &ctx.http,
@@ -39,7 +36,7 @@ pub async fn handle(
                 .content(new_member.mention().to_string())
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(data.config.common.primary_color)
                         .title("🎉 Bienvenue parmi nous !")
                         .description(vec![
                             "Salut, et bienvenue au **Lycée François Mitterrand** !",

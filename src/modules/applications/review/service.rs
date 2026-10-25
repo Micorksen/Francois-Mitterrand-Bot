@@ -2,18 +2,18 @@ use poise::serenity_prelude as serenity;
 use serenity::Mentionable;
 
 use super::modals;
-use crate::{modules::applications::config::RESPONSE_CHANNEL, Data, Error};
+use crate::{Data, Error};
 
 pub async fn handle(
     ctx: &serenity::Context,
-    _data: &Data,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
     let mut embed = serenity::builder::CreateEmbed::from(interaction.message.embeds[0].clone());
 
     match interaction.data.custom_id.as_str() {
         id if id.starts_with("applications:review:accept:") => {
-            accept(ctx, interaction).await?;
+            accept(ctx, data, interaction).await?;
             embed = embed.color(serenity::colours::branding::GREEN).footer(
                 serenity::CreateEmbedFooter::new(format!(
                     "Acceptée par {} ({})",
@@ -22,7 +22,7 @@ pub async fn handle(
             );
         }
         id if id.starts_with("applications:review:refuse:") => {
-            refuse(ctx, interaction).await?;
+            refuse(ctx, data, interaction).await?;
             embed = embed.color(serenity::colours::branding::RED).footer(
                 serenity::CreateEmbedFooter::new(format!(
                     "Refusée par {} ({})",
@@ -34,7 +34,7 @@ pub async fn handle(
     };
 
     // On change la couleur de l'embed et on retire les boutons
-    // après que la candidature ait été acceptée ou refusée.
+    // après que la candidature a été acceptée ou refusée.
     let mut message = interaction.message.clone();
     message
         .edit(
@@ -48,9 +48,10 @@ pub async fn handle(
 
 async fn accept(
     ctx: &serenity::Context,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
-    let Some(data) = poise::execute_modal_on_component_interaction::<modals::Accept>(
+    let Some(modal_data) = poise::execute_modal_on_component_interaction::<modals::Accept>(
         ctx,
         interaction.clone(),
         None,
@@ -61,7 +62,9 @@ async fn accept(
         return Ok(());
     };
 
-    RESPONSE_CHANNEL
+    data.config
+        .applications
+        .response_channel
         .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
@@ -86,8 +89,8 @@ async fn accept(
                             ]
                             .join("\n"),
                         )
-                        .field("Date de l'entretien", data.date, true)
-                        .field("Heure de l'entretien", data.time, true),
+                        .field("Date de l'entretien", modal_data.date, true)
+                        .field("Heure de l'entretien", modal_data.time, true),
                 ),
         )
         .await?;
@@ -97,9 +100,10 @@ async fn accept(
 
 async fn refuse(
     ctx: &serenity::Context,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
-    let Some(data) = poise::execute_modal_on_component_interaction::<modals::Refuse>(
+    let Some(modal_data) = poise::execute_modal_on_component_interaction::<modals::Refuse>(
         ctx,
         interaction.clone(),
         None,
@@ -110,7 +114,9 @@ async fn refuse(
         return Ok(());
     };
 
-    RESPONSE_CHANNEL
+    data.config
+        .applications
+        .response_channel
         .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
@@ -124,7 +130,7 @@ async fn refuse(
                     serenity::CreateEmbed::new()
                         .color(serenity::colours::branding::RED)
                         .title("Candidature refusée !")
-                        .description(data.comment),
+                        .description(modal_data.comment),
                 ),
         )
         .await?;

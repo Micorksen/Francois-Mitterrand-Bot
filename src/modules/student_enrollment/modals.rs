@@ -1,9 +1,7 @@
 use poise::serenity_prelude as serenity;
 
-use super::{
-    config::{LV1, LV2, OPTIONS, SPECIALIZED_SUBJECTS},
-    structs::{Enrollment, Level},
-};
+use super::structs::{Enrollment, Level};
+use crate::Data;
 
 /// Première étape de l'inscription en tant qu'élève.
 #[derive(poise::Modal)]
@@ -31,16 +29,19 @@ pub struct FirstStep {
 }
 
 /// Dernière étape de l'inscription en tant qu'élève.
-pub fn final_step(enrollment: &Enrollment) -> serenity::CreateModal<'static> {
+pub fn final_step<'a>(data: &'a Data, enrollment: &Enrollment) -> serenity::CreateModal<'a> {
     let mut components = vec![
         serenity::CreateModalComponent::Label(serenity::CreateLabel::select_menu(
             "Première langue vivante étrangère",
             serenity::CreateSelectMenu::new(
                 "lv1",
                 serenity::CreateSelectMenuKind::String {
-                    options: LV1
+                    options: data
+                        .config
+                        .student_enrollment
+                        .lv1
                         .iter()
-                        .map(|(k, v)| serenity::CreateSelectMenuOption::new(*v, *k))
+                        .map(|(k, v)| serenity::CreateSelectMenuOption::new(v, k))
                         .collect(),
                 },
             ),
@@ -50,9 +51,12 @@ pub fn final_step(enrollment: &Enrollment) -> serenity::CreateModal<'static> {
             serenity::CreateSelectMenu::new(
                 "lv2",
                 serenity::CreateSelectMenuKind::String {
-                    options: LV2
+                    options: data
+                        .config
+                        .student_enrollment
+                        .lv2
                         .iter()
-                        .map(|(k, v)| serenity::CreateSelectMenuOption::new(*v, *k))
+                        .map(|(k, v)| serenity::CreateSelectMenuOption::new(v, k))
                         .collect(),
                 },
             ),
@@ -67,9 +71,9 @@ pub fn final_step(enrollment: &Enrollment) -> serenity::CreateModal<'static> {
                 serenity::CreateSelectMenu::new(
                     "first_specialized_subject",
                     serenity::CreateSelectMenuKind::String {
-                        options: SPECIALIZED_SUBJECTS[0]
+                        options: data.config.student_enrollment.specialized_subjects[0]
                             .iter()
-                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(*v, *k))
+                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(v, k))
                             .collect(),
                     },
                 ),
@@ -82,9 +86,9 @@ pub fn final_step(enrollment: &Enrollment) -> serenity::CreateModal<'static> {
                 serenity::CreateSelectMenu::new(
                     "second_specialized_subject",
                     serenity::CreateSelectMenuKind::String {
-                        options: SPECIALIZED_SUBJECTS[1]
+                        options: data.config.student_enrollment.specialized_subjects[1]
                             .iter()
-                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(*v, *k))
+                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(v, k))
                             .collect(),
                     },
                 ),
@@ -101,10 +105,13 @@ pub fn final_step(enrollment: &Enrollment) -> serenity::CreateModal<'static> {
                 serenity::CreateSelectMenu::new(
                     "first_specialized_subject",
                     serenity::CreateSelectMenuKind::String {
-                        options: SPECIALIZED_SUBJECTS
+                        options: data
+                            .config
+                            .student_enrollment
+                            .specialized_subjects
                             .iter()
                             .flat_map(|slice| slice.iter())
-                            .map(|&(k, v)| serenity::CreateSelectMenuOption::new(v, k))
+                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(v, k))
                             .collect(),
                     },
                 ),
@@ -117,9 +124,12 @@ pub fn final_step(enrollment: &Enrollment) -> serenity::CreateModal<'static> {
                 serenity::CreateSelectMenu::new(
                     "option",
                     serenity::CreateSelectMenuKind::String {
-                        options: OPTIONS
+                        options: data
+                            .config
+                            .student_enrollment
+                            .options
                             .iter()
-                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(*v, *k))
+                            .map(|(k, v)| serenity::CreateSelectMenuOption::new(v, k))
                             .collect(),
                     },
                 )

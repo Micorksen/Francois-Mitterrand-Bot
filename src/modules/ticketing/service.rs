@@ -1,11 +1,10 @@
 use poise::serenity_prelude as serenity;
 
-use super::config::{CATEGORY, SUPPORT_ROLES};
-use crate::{config::PRIMARY_COLOR, Data, Error};
+use crate::{Data, Error};
 
 pub async fn open(
     ctx: &serenity::Context,
-    _data: &Data,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
     let Some(guild_id) = interaction.guild_id else {
@@ -15,7 +14,7 @@ pub async fn open(
     // Vérifie si l'utilisateur a déjà un ticket ouvert.
     let channels = guild_id.channels(&ctx.http).await?;
     let ticket = channels.iter().find(|c| {
-        c.parent_id == Some(CATEGORY)
+        c.parent_id == Some(data.config.ticketing.category)
             && c.base.kind == serenity::ChannelType::Text
             && c.base.name == interaction.user.id.to_string()
     });
@@ -29,7 +28,7 @@ pub async fn open(
                         .ephemeral(true)
                         .embed(
                             serenity::CreateEmbed::new()
-                                .color(PRIMARY_COLOR)
+                                .color(data.config.common.primary_color)
                                 .title("Tickets")
                                 .description(
                                     [
@@ -69,7 +68,7 @@ pub async fn open(
         },
     ];
 
-    for role in SUPPORT_ROLES {
+    for role in &data.config.ticketing.support_roles {
         permissions.push(serenity::PermissionOverwrite {
             allow: serenity::Permissions::VIEW_CHANNEL,
             deny: serenity::Permissions::empty(),
@@ -82,7 +81,7 @@ pub async fn open(
             &ctx.http,
             serenity::CreateChannel::new(interaction.user.id.to_string())
                 .kind(serenity::ChannelType::Text)
-                .category(CATEGORY)
+                .category(data.config.ticketing.category)
                 .permissions(permissions),
         )
         .await?;
@@ -94,7 +93,7 @@ pub async fn open(
                 .content("@everyone")
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(data.config.common.primary_color)
                         .title("Tickets")
                         .description(
                             [

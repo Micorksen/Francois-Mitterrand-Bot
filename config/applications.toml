@@ -1,0 +1,15 @@
+[applications]
+staff_roles = [
+    1550774020092207144, # Proviseur
+    1550774021442904084, # Proviseur Adjoint
+    1550774023506501682, # Assistant de Direction
+    1550774024471187496, # Secrétaire
+    1550774025469558795, # Conseiller Principal d'Éducation
+    1550774006804783205, # Professeur
+    1550774039264370800, # Assistant d'éducation
+    1550774041650921473, # Infirmier
+    1550774036479610930, # Modérateur
+]
+
+review_channel = 1562936388385640529
+response_channel = 1563158109231513671

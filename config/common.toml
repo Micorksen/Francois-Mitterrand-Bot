@@ -1,0 +1,9 @@
+[common]
+primary_color = 0x3A2D81 # Couleur primaire utilisée pour les embeds.
+
+honeypot_channel = 1563132033864040578
+reported_messages_channel = 1563295003722260641
+welcome_channel = 1550774192490680372
+
+supporter_role = 1550774050689912903
+welcome_role = 1550774068855177247

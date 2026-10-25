@@ -1,6 +1,6 @@
 use poise::serenity_prelude as serenity;
 
-use crate::{config::PRIMARY_COLOR, Context, Error};
+use crate::{Context, Error};
 
 #[derive(poise::ChoiceParameter)]
 pub enum EmbedChoice {
@@ -48,7 +48,7 @@ pub async fn embed(
                 // Si le message contient un ou plusieurs embeds, et qu'il n'explicite
                 // pas une couleur, on utilise la couleur primaire.
                 obj.entry("color")
-                    .or_insert(serde_json::json!(PRIMARY_COLOR));
+                    .or_insert(serde_json::json!(ctx.data().config.common.primary_color));
             }
         }
     }
@@ -70,7 +70,7 @@ pub async fn embed(
     ctx.send(
         poise::CreateReply::default().embed(
             serenity::CreateEmbed::new()
-                .color(PRIMARY_COLOR)
+                .color(ctx.data().config.common.primary_color)
                 .title("Message enrichi")
                 .description("Le message enrichi a été envoyé avec **succès** !"),
         ),

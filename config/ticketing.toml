@@ -1,0 +1,10 @@
+[ticketing]
+category = 1563272520722030593
+support_roles = [
+    1550774020092207144, # Proviseur
+    1550774021442904084, # Proviseur Adjoint
+    1550774023506501682, # Assistant de Direction
+    1550774024471187496, # Secrétaire
+    1550774025469558795, # Conseiller Principal d'Éducation
+    1550774036479610930, # Modérateur
+]

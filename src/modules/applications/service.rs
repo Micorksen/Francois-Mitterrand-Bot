@@ -1,28 +1,25 @@
 use poise::serenity_prelude as serenity;
 
-use super::{
-    config::{REVIEW_CHANNEL, STAFF_ROLES},
-    modals,
-};
-use crate::{config::PRIMARY_COLOR, Data, Error};
+use super::modals;
+use crate::{Data, Error};
 
 pub async fn handle(
     ctx: &serenity::Context,
-    _data: &Data,
+    data: &Data,
     component: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
-    if component
-        .member
-        .as_ref()
-        .is_some_and(|m| m.roles.iter().any(|r| STAFF_ROLES.contains(r)))
-    {
+    if component.member.as_ref().is_some_and(|m| {
+        m.roles
+            .iter()
+            .any(|r| data.config.applications.staff_roles.contains(r))
+    }) {
         component.create_response(
             &ctx.http,
             serenity::CreateInteractionResponse::Message(
                 serenity::CreateInteractionResponseMessage::new()
                     .embed(
                         serenity::CreateEmbed::new()
-                            .color(PRIMARY_COLOR)
+                            .color(data.config.common.primary_color)
                             .title("Il y a un petit malentendu...")
                             .description("Tu es déjà compté parmi nos membres de l'équipe, pas besoin de refaire une demande !")
                     )
@@ -78,7 +75,7 @@ pub async fn handle(
     };
 
     let mut embed = serenity::CreateEmbed::new()
-        .color(PRIMARY_COLOR)
+        .color(data.config.common.primary_color)
         .field("Civilité", &applicant.civility, true)
         .field("Prénom", &applicant.first_name, true)
         .field("Nom de famille", &applicant.last_name, true);
@@ -91,7 +88,9 @@ pub async fn handle(
         embed = embed.field("Rôle", role, true);
     }
 
-    REVIEW_CHANNEL
+    data.config
+        .applications
+        .review_channel
         .to_guild_channel(&ctx, component.guild_id)
         .await?
         .send_message(
@@ -134,7 +133,7 @@ pub async fn handle(
                 .ephemeral(true)
                 .embed(
                     serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
+                        .color(data.config.common.primary_color)
                         .title("Ta candidature en tant que professeur")
                         .description(format!(
                             "C'est tout bon pour moi, **{} {} {}** !",

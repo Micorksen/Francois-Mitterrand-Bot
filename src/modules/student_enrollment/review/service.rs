@@ -4,9 +4,6 @@ use serenity::Mentionable;
 use super::modals;
 use crate::{
     modules::student_enrollment::{
-        config::{
-            ENT_CLASSES, INTERN_ROLE, RESPONSE_CHANNEL, SEX_F_ROLE, SEX_M_ROLE, STUDENT_ROLE,
-        },
         structs,
         structs::{Regime, Sex},
     }, Data,
@@ -31,7 +28,7 @@ pub async fn handle(
             );
         }
         id if id.starts_with("student_enrollment:review:refuse:") => {
-            refuse(ctx, interaction).await?;
+            refuse(ctx, data, interaction).await?;
             embed = embed.color(serenity::colours::branding::RED).footer(
                 serenity::CreateEmbedFooter::new(format!(
                     "Refusée par {} ({})",
@@ -43,7 +40,7 @@ pub async fn handle(
     };
 
     // On change la couleur de l'embed et on retire les boutons
-    // après que la candidature ait été acceptée ou refusée.
+    // après que la candidature a été acceptée ou refusée.
     let mut message = interaction.message.clone();
     message
         .edit(
@@ -90,13 +87,26 @@ async fn accept(
     let first_name = interaction.message.embeds[0].fields[0].value.as_str();
     let last_name = interaction.message.embeds[0].fields[1].value.as_str();
 
-    // On créé le compte ENT de l'élève.
+    // On crée le compte ENT de l'élève.
     let http_client = reqwest::Client::new();
     let ent_token = http_client
-        .post(format!("{}/auth/oauth2/token", data.config.ent_url))
+        .post(format!(
+            "{}/auth/oauth2/token",
+            data.config.student_enrollment.ent.url
+        ))
         .form(&[
-            ("client_id", data.config.ent_client_id.as_str()),
-            ("client_secret", data.config.ent_client_secret.as_str()),
+            (
+                "client_id",
+                data.config.student_enrollment.ent.oauth2_client_id.as_str(),
+            ),
+            (
+                "client_secret",
+                data.config
+                    .student_enrollment
+                    .ent
+                    .oauth2_client_secret
+                    .as_str(),
+            ),
             ("grant_type", "client_credentials"),
             (
                 "scope",
@@ -109,7 +119,10 @@ async fn accept(
         .await?;
 
     let ent_account = http_client
-        .post(format!("{}/directory/api/user", data.config.ent_url))
+        .post(format!(
+            "{}/directory/api/user",
+            data.config.student_enrollment.ent.url
+        ))
         .bearer_auth(ent_token.access_token)
         .form(&[
             ("firstName", first_name),
@@ -117,9 +130,17 @@ async fn accept(
             ("type", "Student"),
             (
                 "classId",
-                ENT_CLASSES.get(class.as_str()).expect("Classe inconnue"),
+                data.config
+                    .student_enrollment
+                    .ent
+                    .classes
+                    .get(class.as_str())
+                    .expect("Classe inconnue"),
             ),
-            ("structureId", &data.config.ent_structure_id),
+            (
+                "structureId",
+                &data.config.student_enrollment.ent.structure_id,
+            ),
             ("birthDate", "2001-01-01"),
         ])
         .send()
@@ -128,15 +149,15 @@ async fn accept(
         .await?;
 
     // On attribue automatiquement les rôles en fonction des informations renseignées par l'élève.
-    let mut roles = vec![STUDENT_ROLE];
+    let mut roles = vec![data.config.student_enrollment.student_role];
     if Sex::from(interaction.message.embeds[0].fields[2].value.as_str()) == Sex::Male {
-        roles.push(SEX_M_ROLE);
+        roles.push(data.config.student_enrollment.sex_m_role);
     } else {
-        roles.push(SEX_F_ROLE);
+        roles.push(data.config.student_enrollment.sex_f_role);
     }
 
     if Regime::from(interaction.message.embeds[0].fields[5].value.as_str()) == Regime::Intern {
-        roles.push(INTERN_ROLE);
+        roles.push(data.config.student_enrollment.intern_role);
     }
 
     member
@@ -152,7 +173,9 @@ async fn accept(
         )
         .await?;
 
-    RESPONSE_CHANNEL
+    data.config
+        .student_enrollment
+        .response_channel
         .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
@@ -184,9 +207,10 @@ async fn accept(
 
 async fn refuse(
     ctx: &serenity::Context,
+    data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
-    let Some(data) = poise::execute_modal_on_component_interaction::<modals::Refuse>(
+    let Some(modal_data) = poise::execute_modal_on_component_interaction::<modals::Refuse>(
         ctx,
         interaction.clone(),
         None,
@@ -197,7 +221,9 @@ async fn refuse(
         return Ok(());
     };
 
-    RESPONSE_CHANNEL
+    data.config
+        .student_enrollment
+        .response_channel
         .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
@@ -211,7 +237,7 @@ async fn refuse(
                     serenity::CreateEmbed::new()
                         .color(serenity::colours::branding::RED)
                         .title("Demande d'inscription refusée !")
-                        .description(data.comment),
+                        .description(modal_data.comment),
                 ),
         )
         .await?;

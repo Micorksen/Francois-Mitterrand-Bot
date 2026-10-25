@@ -2,15 +2,14 @@
 authors = ["Micorksen <hello@micorksen.eu>"]
 edition = "2024"
 name = "francois-mitterrand-bot"
-version = "0.1.1"
+version = "0.1.2"
 description = "Bot officiel du Lycée François Mitterrand, codé en Rust."
 license = "GPL-3"
 repository = "https://github.com/Micorksen/francois-mitterrand-bot"
 
 [dependencies]
 dotenvy = "0.15.7"
-envy = "0.4.2"
-phf = { version = "0.14.0", features = ["macros"] }
+figment = { version = "0.10.19", features = ["toml", "env"] }
 poise = { git = "https://github.com/serenity-rs/poise", branch = "serenity-next", version = "0.7.0" }
 reqwest = { version = "0.13.5", features = ["form"] }
 serde = { version = "1.0.229", features = ["derive"] }
