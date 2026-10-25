@@ -2,7 +2,7 @@
 authors = ["Micorksen <hello@micorksen.eu>"]
 edition = "2024"
 name = "francois-mitterrand-bot"
-version = "0.1.0"
+version = "0.1.1"
 description = "Bot officiel du Lycée François Mitterrand, codé en Rust."
 license = "GPL-3"
 repository = "https://github.com/Micorksen/francois-mitterrand-bot"

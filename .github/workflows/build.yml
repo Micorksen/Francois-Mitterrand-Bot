@@ -12,16 +12,37 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset: francois-mitterrand-bot-x86_64
+          - os: ubuntu-24.04-arm
+            asset: francois-mitterrand-bot-aarch64
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rust-lang/setup-rust-toolchain@v2
       - run: cargo build --release
+      - run: cp target/release/francois-mitterrand-bot ${{ matrix.asset }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.asset }}
+          path: ${{ matrix.asset }}
+  
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
       - name: Création de la release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${{ github.ref_name }}" \
-            target/release/francois-mitterrand-bot \
+          gh release create "${{ github.ref_name }}" dist/* \
+            --repo "${{ github.repository }}" \
             --title "${{ github.ref_name }}" \
             --generate-notes
