@@ -1,6 +1,6 @@
 use poise::serenity_prelude as serenity;
 
-use crate::{Data, Error, config::SUPPORTING_ROLE};
+use crate::{config::SUPPORTER_ROLE, Data, Error};
 
 /// Système de soutien (avec le lien du serveur dans le statut Discord).
 pub async fn handle(
@@ -20,11 +20,11 @@ pub async fn handle(
             .is_some_and(|s| s.to_lowercase().contains("/lycee-fm"))
     });
 
-    if is_supporting && !member.roles.contains(&SUPPORTING_ROLE) {
+    if is_supporting && !member.roles.contains(&SUPPORTER_ROLE) {
         member
             .add_role(
                 &ctx.http,
-                SUPPORTING_ROLE,
+                SUPPORTER_ROLE,
                 Some("Rôle attribué aux personnes soutenant le serveur"),
             )
             .await?;
@@ -32,7 +32,7 @@ pub async fn handle(
         member
             .remove_role(
                 &ctx.http,
-                SUPPORTING_ROLE,
+                SUPPORTER_ROLE,
                 Some("Rôle attribué aux personnes soutenant le serveur"),
             )
             .await?;
