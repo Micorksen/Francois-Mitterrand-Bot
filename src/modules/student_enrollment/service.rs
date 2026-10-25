@@ -2,10 +2,10 @@ use poise::serenity_prelude as serenity;
 
 use super::{
     config::{REVIEW_CHANNEL, STUDENT_ROLE},
-    modals, structs,
+    modals,
     structs::Enrollment,
 };
-use crate::{config::PRIMARY_COLOR, Data, Error};
+use crate::{Data, Error, config::PRIMARY_COLOR};
 
 async fn first_step(
     ctx: &serenity::Context,
@@ -106,21 +106,8 @@ pub async fn handle(
     _data: &Data,
     interaction: &serenity::ComponentInteraction,
 ) -> Result<(), Error> {
-    if interaction
-        .member
-        .as_deref()
-        .is_some_and(|m| m.roles.contains(&STUDENT_ROLE))
-    {
-        interaction.create_response(&ctx.http, serenity::CreateInteractionResponse::Message(
-            serenity::CreateInteractionResponseMessage::new()
-                .embed(
-                    serenity::CreateEmbed::new()
-                        .color(PRIMARY_COLOR)
-                        .title("Il y a un petit malentendu...")
-                        .description("Tu es déjà compté parmi nos élèves, pas besoin de refaire une demande !")
-                )
-                .ephemeral(true),
-        )).await?;
+    if is_student_member(interaction) {
+        send_already_enrolled_response(ctx, interaction).await?;
         return Ok(());
     }
 
@@ -135,6 +122,46 @@ pub async fn handle(
     };
 
     send_for_review(ctx, interaction.guild_id, &interaction.user, &enrollment).await?;
+    send_enrollment_success_followup(ctx, interaction, &enrollment).await?;
+
+    Ok(())
+}
+
+fn is_student_member(interaction: &serenity::ComponentInteraction) -> bool {
+    interaction
+        .member
+        .as_deref()
+        .is_some_and(|m| m.roles.contains(&STUDENT_ROLE))
+}
+
+async fn send_already_enrolled_response(
+    ctx: &serenity::Context,
+    interaction: &serenity::ComponentInteraction,
+) -> Result<(), Error> {
+    interaction
+        .create_response(
+            &ctx.http,
+            serenity::CreateInteractionResponse::Message(
+                serenity::CreateInteractionResponseMessage::new()
+                    .embed(
+                        serenity::CreateEmbed::new()
+                            .color(PRIMARY_COLOR)
+                            .title("Il y a un petit malentendu...")
+                            .description("Tu es déjà compté parmi nos élèves, pas besoin de refaire une demande !"),
+                    )
+                    .ephemeral(true),
+            ),
+        )
+        .await?;
+
+    Ok(())
+}
+
+async fn send_enrollment_success_followup(
+    ctx: &serenity::Context,
+    interaction: &serenity::ComponentInteraction,
+    enrollment: &Enrollment,
+) -> Result<(), Error> {
     interaction
         .create_followup(
             &ctx.http,
@@ -223,127 +250,38 @@ async fn final_step(
             .await?;
 
         for component in submit.data.components.iter() {
-            let serenity::ModalComponent::Label(label) = component else {
-                continue;
-            };
-
-            match &label.component {
-                serenity::LabelComponent::SelectMenu(select) => {
-                    let values: Vec<String> = select
-                        .values
-                        .iter()
-                        .map(|value| value.to_string())
-                        .collect();
-                    match select.custom_id.as_str() {
-                        "lv1" => enrollment.lv1 = values.into_iter().next(),
-                        "lv2" => enrollment.lv2 = values.into_iter().next(),
-                        "first_specialized_subject" | "second_specialized_subject" => {
-                            if let Some(value) = values.into_iter().next() {
-                                enrollment
-                                    .specialized_subjects
-                                    .get_or_insert_with(Vec::new)
-                                    .push(value);
-                            }
-                        }
-                        "option" => enrollment.option = values.into_iter().next(),
-                        _ => {}
-                    }
-                }
-                _ => {}
-            }
+            apply_modal_component_to_enrollment(component, enrollment);
         }
     }
 
     Ok(submit)
 }
 
-pub async fn retrieve_ent_account(
-    ctx: &serenity::Context,
-    data: &Data,
-    interaction: &serenity::ComponentInteraction,
-) -> Result<(), Error> {
-    if interaction.message.mentions[0].id != interaction.user.id {
-        interaction
-            .create_response(
-                &ctx.http,
-                serenity::CreateInteractionResponse::Message(
-                    serenity::CreateInteractionResponseMessage::new()
-                        .ephemeral(true)
-                        .embed(
-                            serenity::CreateEmbed::new()
-                                .color(PRIMARY_COLOR)
-                                .title("Récupérer mes identifiants")
-                                .description("Ce message ne t'était pas destiné..."),
-                        ),
-                ),
-            )
-            .await?;
+fn apply_modal_component_to_enrollment(
+    component: &serenity::ModalComponent,
+    enrollment: &mut Enrollment,
+) {
+    let serenity::ModalComponent::Label(label) = component else {
+        return;
+    };
 
-        return Ok(());
+    let serenity::LabelComponent::SelectMenu(select) = &label.component else {
+        return;
+    };
+
+    let selected_value = select.values.first().map(|value| value.to_string());
+    match select.custom_id.as_str() {
+        "lv1" => enrollment.lv1 = selected_value,
+        "lv2" => enrollment.lv2 = selected_value,
+        "first_specialized_subject" | "second_specialized_subject" => {
+            if let Some(value) = selected_value {
+                enrollment
+                    .specialized_subjects
+                    .get_or_insert_with(Vec::new)
+                    .push(value);
+            }
+        }
+        "option" => enrollment.option = selected_value,
+        _ => {}
     }
-
-    let http_client = reqwest::Client::new();
-
-    let ent_token = http_client
-        .post(format!("{}/auth/oauth2/token", data.config.ent_url))
-        .form(&[
-            ("client_id", data.config.ent_client_id.as_str()),
-            ("client_secret", data.config.ent_client_secret.as_str()),
-            ("grant_type", "client_credentials"),
-            (
-                "scope",
-                "org.entcore.directory.controllers.UserController|get",
-            ),
-        ])
-        .send()
-        .await?
-        .json::<structs::Oauth2Token>()
-        .await?;
-
-    let ent_account = http_client
-        .get(format!(
-            "{}/directory/user/{}",
-            data.config.ent_url,
-            interaction.data.custom_id.split(":").last().unwrap()
-        ))
-        .bearer_auth(ent_token.access_token)
-        .send()
-        .await?
-        .json::<structs::ApiUser>()
-        .await?;
-
-    interaction
-        .create_response(
-            &ctx.http,
-            serenity::CreateInteractionResponse::Message(
-                serenity::CreateInteractionResponseMessage::new()
-                    .ephemeral(true)
-                    .embed(
-                        serenity::CreateEmbed::new()
-                            .color(PRIMARY_COLOR)
-                            .title("Récupérer mes identifiants")
-                            .field("Identifiant", format!("`{}`", ent_account.login), true)
-                            .field(
-                                "Code d'activation",
-                                format!("||`{}`||", ent_account.activation_code.unwrap()),
-                                true,
-                            ),
-                    )
-                    .button(
-                        serenity::CreateButton::new_link("https://ent.lycee-fm.fr/")
-                            .emoji(serenity::EmojiId::new(1563919436140781568))
-                            .label("Accéder à l'ENT"),
-                    ),
-            ),
-        )
-        .await?;
-
-    // On retire le bouton pour récupérer les identifiants
-    // après le premier clic.
-    let mut message = interaction.message.clone();
-    message
-        .edit(&ctx.http, serenity::EditMessage::new().components(&[]))
-        .await?;
-
-    Ok(())
 }

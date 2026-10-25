@@ -24,8 +24,7 @@ pub async fn handle_component(
             crate::modules::student_enrollment::review::service::handle(ctx, data, component).await
         }
         id if id.starts_with("student_enrollment:retrieve_ent_account:") => {
-            crate::modules::student_enrollment::service::retrieve_ent_account(ctx, data, component)
-                .await
+            crate::modules::student_enrollment::ent_account::retrieve(ctx, data, component).await
         }
 
         _ => Ok(()),
