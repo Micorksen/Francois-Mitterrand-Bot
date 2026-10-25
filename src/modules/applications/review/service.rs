@@ -2,7 +2,7 @@ use poise::serenity_prelude as serenity;
 use serenity::Mentionable;
 
 use super::modals;
-use crate::{Data, Error, modules::applications::config::RESPONSE_CHANNEL};
+use crate::{modules::applications::config::RESPONSE_CHANNEL, Data, Error};
 
 pub async fn handle(
     ctx: &serenity::Context,
@@ -62,7 +62,7 @@ async fn accept(
     };
 
     RESPONSE_CHANNEL
-        .to_guild_channel(&ctx.http, interaction.guild_id)
+        .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
             &ctx.http,
@@ -111,7 +111,7 @@ async fn refuse(
     };
 
     RESPONSE_CHANNEL
-        .to_guild_channel(&ctx.http, interaction.guild_id)
+        .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
             &ctx.http,

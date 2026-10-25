@@ -42,7 +42,7 @@ async fn send_for_review(
     enrollment: &Enrollment,
 ) -> Result<(), Error> {
     REVIEW_CHANNEL
-        .to_guild_channel(&ctx.http, guild_id)
+        .to_guild_channel(&ctx, guild_id)
         .await?
         .send_message(
             &ctx.http,

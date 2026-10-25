@@ -2,8 +2,8 @@ use poise::serenity_prelude as serenity;
 use serenity::Mentionable;
 
 use crate::{
-    Data, Error,
-    config::{PRIMARY_COLOR, WELCOME_CHANNEL, WELCOME_ROLE},
+    config::{PRIMARY_COLOR, WELCOME_CHANNEL, WELCOME_ROLE}, Data,
+    Error,
 };
 
 pub async fn handle(
@@ -11,14 +11,7 @@ pub async fn handle(
     _data: &Data,
     new_member: &serenity::Member,
 ) -> Result<(), Error> {
-    let (guild_member_count, guild_icon_url) = {
-        let guild = ctx.cache.guild(new_member.guild_id).unwrap();
-        (
-            guild.member_count,
-            guild.icon_url().unwrap_or("".to_string()),
-        )
-    };
-
+    // Ajoute le rôle de bienvenue aux nouveaux membres.
     new_member
         .add_role(
             &ctx.http,
@@ -26,7 +19,19 @@ pub async fn handle(
             Some("Rôle attribué automatiquement aux nouveaux membres"),
         )
         .await?;
-    WELCOME_CHANNEL.to_guild_channel(&ctx.http, Some(new_member.guild_id))
+
+    // Récupère le nombre de membres et l'icône du serveur (en privilégiant le cache).
+    let (member_count, icon_url) = if let Some(guild) = ctx.cache.guild(new_member.guild_id) {
+        (guild.member_count, guild.icon_url().unwrap_or_default())
+    } else {
+        let guild = ctx.http.get_guild_with_counts(new_member.guild_id).await?;
+        (
+            guild.approximate_member_count.unwrap(),
+            guild.icon_url().unwrap_or_default(),
+        )
+    };
+
+    WELCOME_CHANNEL.to_guild_channel(&ctx, Some(new_member.guild_id))
         .await?
         .send_message(
             &ctx.http,
@@ -43,8 +48,8 @@ pub async fn handle(
                         ].join("\n"))
                         .thumbnail(new_member.face(), None)
                         .footer(
-                            serenity::CreateEmbedFooter::new(format!("Nous sommes désormais {} membres !", guild_member_count))
-                                .icon_url(guild_icon_url)
+                            serenity::CreateEmbedFooter::new(format!("Nous sommes désormais {} membres !", member_count))
+                                .icon_url(icon_url)
                         )
                 )
         ).await?;

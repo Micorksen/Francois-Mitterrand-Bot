@@ -74,7 +74,7 @@ async fn accept(
         .guild_id
         .unwrap()
         .member(
-            &ctx.http,
+            &ctx,
             interaction
                 .data
                 .custom_id
@@ -153,7 +153,7 @@ async fn accept(
         .await?;
 
     RESPONSE_CHANNEL
-        .to_guild_channel(&ctx.http, interaction.guild_id)
+        .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
             &ctx.http,
@@ -198,7 +198,7 @@ async fn refuse(
     };
 
     RESPONSE_CHANNEL
-        .to_guild_channel(&ctx.http, interaction.guild_id)
+        .to_guild_channel(&ctx, interaction.guild_id)
         .await?
         .send_message(
             &ctx.http,

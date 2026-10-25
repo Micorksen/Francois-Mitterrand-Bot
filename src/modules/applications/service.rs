@@ -4,7 +4,7 @@ use super::{
     config::{REVIEW_CHANNEL, STAFF_ROLES},
     modals,
 };
-use crate::{Data, Error, config::PRIMARY_COLOR};
+use crate::{config::PRIMARY_COLOR, Data, Error};
 
 pub async fn handle(
     ctx: &serenity::Context,
@@ -92,7 +92,7 @@ pub async fn handle(
     }
 
     REVIEW_CHANNEL
-        .to_guild_channel(&ctx.http, component.guild_id)
+        .to_guild_channel(&ctx, component.guild_id)
         .await?
         .send_message(
             &ctx.http,

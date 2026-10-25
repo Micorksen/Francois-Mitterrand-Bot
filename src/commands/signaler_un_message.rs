@@ -16,7 +16,7 @@ pub async fn signaler_un_message(
     message: serenity::Message,
 ) -> Result<(), Error> {
     REPORTED_MESSAGES_CHANNEL
-        .to_guild_channel(&ctx.http(), message.guild_id)
+        .to_guild_channel(&ctx, message.guild_id)
         .await?
         .send_message(
             &ctx.http(),
