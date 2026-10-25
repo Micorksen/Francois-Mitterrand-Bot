@@ -3,9 +3,8 @@ use poise::serenity_prelude as serenity;
 // La liste des disciplines de recrutement
 // pour les professeurs est définie dans le modal.
 
-/// Rôle attribués aux membres de l'équipe.
 pub const STAFF_ROLES: &[serenity::RoleId] = &[
-    //serenity::RoleId::new(1550774020092207144), // Proviseur TODO : à décommenter pour production
+    serenity::RoleId::new(1550774020092207144), // Proviseur
     serenity::RoleId::new(1550774021442904084), // Proviseur Adjoint
     serenity::RoleId::new(1550774023506501682), // Assistant de Direction
     serenity::RoleId::new(1550774024471187496), // Secrétaire
@@ -16,8 +15,5 @@ pub const STAFF_ROLES: &[serenity::RoleId] = &[
     serenity::RoleId::new(1550774036479610930), // Modérateur
 ];
 
-/// Salon à utiliser pour envoyer les candidatures.
 pub const REVIEW_CHANNEL: serenity::ChannelId = serenity::ChannelId::new(1562936388385640529);
-
-/// Salon à utiliser pour envoyer les réponses aux candidatures.
 pub const RESPONSE_CHANNEL: serenity::ChannelId = serenity::ChannelId::new(1563158109231513671);
