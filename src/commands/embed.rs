@@ -16,6 +16,8 @@ pub enum EmbedChoice {
     JoinTheAdventure,
     #[name = "Règlement"]
     Rules,
+    #[name = "Tickets"]
+    Tickets,
 }
 
 impl EmbedChoice {
@@ -27,6 +29,7 @@ impl EmbedChoice {
             Self::Pronote => include_str!("../../embeds/pronote.json"),
             Self::JoinTheAdventure => include_str!("../../embeds/join_the_adventure.json"),
             Self::Rules => include_str!("../../embeds/rules.json"),
+            Self::Tickets => include_str!("../../embeds/tickets.json"),
         }
     }
 }

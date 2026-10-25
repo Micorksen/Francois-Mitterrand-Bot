@@ -28,6 +28,12 @@ pub async fn handle_component(
                 .await
         }
 
+        // Système de tickets.
+        "ticketing:open" => crate::modules::ticketing::service::open(ctx, data, component).await,
+        "ticketing:delete" => {
+            crate::modules::ticketing::service::delete(ctx, data, component).await
+        }
+
         _ => Ok(()),
     }
 }
